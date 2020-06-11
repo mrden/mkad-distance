@@ -2,6 +2,8 @@
   "name": "mrden/mkad-distance",
   "description": "Расчет расстояний за МКАД",
   "type": "library",
+  "keywords": ["distance", "mkad", "мкад", "расстояние", "расстояние за мкад"],
+  "license": "The MIT License (MIT)",
   "require": {
     "ext-curl": "*",
     "ext-json": "*",
