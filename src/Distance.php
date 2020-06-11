@@ -8,9 +8,11 @@
 
 namespace Mrden\MkadDistance;
 
+use Desarrolla2\Cache\File;
 use GuzzleHttp\Client;
 use Mrden\MkadDistance\Geometry\Point;
 use Mrden\MkadDistance\Geometry\Polygon;
+use Psr\SimpleCache\InvalidArgumentException;
 use Yandex\Geo\Api;
 use Yandex\Geo\Exception;
 
@@ -36,10 +38,36 @@ class Distance
     private $yandexGeoCoderApiKey = '';
 
     /**
+     * @var File
+     */
+    private $cache;
+    /**
+     * Время хранения кэша.
+     * По-умолчанию 5 дней
+     * @var float|int
+     */
+    private $cacheTtl = 5 * 24 * 60 * 60;
+
+    /**
+     * Distance constructor.
+     * @param string $yandexGeoCoderApiKey
+     */
+    public function __construct(string $yandexGeoCoderApiKey = '')
+    {
+        $this->yandexGeoCoderApiKey = $yandexGeoCoderApiKey;
+        $cacheDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'cacheForMkad';
+        if (!file_exists($cacheDir)) {
+            mkdir($cacheDir);
+        }
+        $this->cache = new File($cacheDir);
+    }
+
+    /**
      * Рассчитать расстояние за МКАД в метрах
      * @param array|Point|string $param
      * @return null|float
      * @throws Exceptions\DistanceExceptions
+     * @throws InvalidArgumentException
      */
     public function calculate($param)
     {
@@ -49,16 +77,23 @@ class Distance
         } elseif (is_array($param)) {
             $target = Point::createFromArray($param);
         } elseif (is_string($param) && $this->yandexGeoCoderApiKey) {
-            $api = new Api();
-            $api->setToken($this->yandexGeoCoderApiKey);
-            try {
-                $response = $api->setToken($this->yandexGeoCoderApiKey)
-                    ->setQuery($param)
-                    ->setLimit(1)
-                    ->load()
-                    ->getResponse();
-            } catch (Exception $e) {
-                throw new Exceptions\DistanceExceptions($e->getMessage(), $e->getCode(), $e);
+            $cacheKey = 'geocoder.' . md5(strtolower($param));
+            if ($this->cache->has($cacheKey)) {
+                $response = $this->cache->get($cacheKey);
+            } else {
+                $api = new Api();
+                $api->setToken($this->yandexGeoCoderApiKey);
+                try {
+                    $response = $api->setToken($this->yandexGeoCoderApiKey)
+                        ->setQuery($param)
+                        ->setLimit(1)
+                        ->load()
+                        ->getResponse();
+
+                    $this->cache->set($cacheKey, $response, $this->cacheTtl);
+                } catch (Exception $e) {
+                    throw new Exceptions\DistanceExceptions($e->getMessage(), $e->getCode(), $e);
+                }
             }
 
             if ($response && $response->getList()) {
@@ -104,10 +139,21 @@ class Distance
         $mkadPintsDistances = [];
 
         foreach ($neededMkadCoordinates as $lineDistance => $mkadJunctionsPoint) {
-            $response = $client->get(
-                "https://router.project-osrm.org/route/v1/driving/{$mkadJunctionsPoint->getLon()}," .
-                "{$mkadJunctionsPoint->getLat()};{$target->getLon()},{$target->getLat()}?overview=false");
-            $resJson = json_decode((string)$response->getBody(), true);
+            $url = sprintf(
+                "https://router.project-osrm.org/route/v1/driving/%s,%s;%s,%s?overview=false",
+                $mkadJunctionsPoint->getLon(),
+                $mkadJunctionsPoint->getLat(),
+                $target->getLon(),
+                $target->getLat()
+            );
+            $cacheKey = 'osrm.' . md5($url);
+            if ($this->cache->has($cacheKey)) {
+                $resJson = $this->cache->get($cacheKey);
+            } else {
+                $response = $client->get($url);
+                $resJson = json_decode((string)$response->getBody(), true);
+                $this->cache->set($cacheKey, $resJson, $this->cacheTtl);
+            }
             $mkadPintsDistances[$lineDistance] = $resJson['routes'][0]['distance'];
             $current++;
 
