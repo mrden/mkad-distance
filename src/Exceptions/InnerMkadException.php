@@ -6,7 +6,7 @@
  * Time: 13:43
  */
 
-namespace mrden\MkadDistance\Exceptions;
+namespace Mrden\MkadDistance\Exceptions;
 
 class InnerMkadException extends DistanceExceptions
 {

@@ -9,7 +9,7 @@
 ## Примеры использования
 
 ```php
-use mrden\MkadDistance\Distance;
+use Mrden\MkadDistance\Distance;
 $distance = new Distance();
 ```
 ```php

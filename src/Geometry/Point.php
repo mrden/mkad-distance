@@ -6,7 +6,7 @@
  * Time: 18:21
  */
 
-namespace mrden\MkadDistance\Geometry;
+namespace Mrden\MkadDistance\Geometry;
 
 class Point
 {

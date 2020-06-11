@@ -6,7 +6,7 @@
  * Time: 13:25
  */
 
-namespace mrden\MkadDistance\Exceptions;
+namespace Mrden\MkadDistance\Exceptions;
 
 use Exception;
 

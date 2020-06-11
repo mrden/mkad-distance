@@ -6,11 +6,11 @@
  * Time: 19:24
  */
 
-namespace mrden\MkadDistance;
+namespace Mrden\MkadDistance;
 
 use GuzzleHttp\Client;
-use mrden\MkadDistance\Geometry\Point;
-use mrden\MkadDistance\Geometry\Polygon;
+use Mrden\MkadDistance\Geometry\Point;
+use Mrden\MkadDistance\Geometry\Polygon;
 use Yandex\Geo\Api;
 use Yandex\Geo\Exception;
 
