@@ -79,7 +79,7 @@ class Distance
         $innerMkad = (new Polygon(self::MKAD_POLYGON_DATA))->isInner($target);
 
         if ($innerMkad) {
-            throw new Exceptions\DistanceExceptions('Target point located inside the MKAD.');
+            throw new Exceptions\InnerMkadException('Target point located inside the MKAD.');
         }
 
         // Процесс отсечения самых дальних точек развязок на МКАД
