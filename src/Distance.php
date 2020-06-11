@@ -37,7 +37,7 @@ class Distance
 
     /**
      * Рассчитать расстояние за МКАД в метрах
-     * @param array|Point $param
+     * @param array|Point|string $param
      * @return null|float
      * @throws Exceptions\DistanceExceptions
      */
