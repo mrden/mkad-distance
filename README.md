@@ -12,6 +12,7 @@
 use Mrden\MkadDistance\Distance;
 $distance = new Distance();
 ```
+Дальше:
 ```php
 $res = $distance->calculate([55.860297, 37.120094]);
 ```

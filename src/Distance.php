@@ -9,6 +9,7 @@
 namespace Mrden\MkadDistance;
 
 use Desarrolla2\Cache\File;
+use Desarrolla2\Cache\Predis;
 use GuzzleHttp\Client;
 use Mrden\MkadDistance\Geometry\Point;
 use Mrden\MkadDistance\Geometry\Polygon;
@@ -51,15 +52,22 @@ class Distance
     /**
      * Distance constructor.
      * @param string $yandexGeoCoderApiKey
+     * @param \Predis\Client|null $predisClient
      */
-    public function __construct(string $yandexGeoCoderApiKey = '')
+    public function __construct(string $yandexGeoCoderApiKey = '', \Predis\Client $predisClient = null)
     {
         $this->yandexGeoCoderApiKey = $yandexGeoCoderApiKey;
-        $cacheDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'cacheForMkad';
-        if (!file_exists($cacheDir)) {
-            mkdir($cacheDir);
+
+        // Кэширование в redis или в файлах
+        if ($predisClient) {
+            $this->cache = new Predis($predisClient);
+        } else {
+            $cacheDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'cacheForMkad';
+            if (!file_exists($cacheDir)) {
+                mkdir($cacheDir);
+            }
+            $this->cache = new File($cacheDir);
         }
-        $this->cache = new File($cacheDir);
     }
 
     /**

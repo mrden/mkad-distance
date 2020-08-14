@@ -10,7 +10,8 @@
     "ext-json": "*",
     "guzzlehttp/guzzle": "~6.0",
     "yandex/geo": "*",
-    "desarrolla2/cache": "^3.0"
+    "desarrolla2/cache": "^3.0",
+    "predis/predis": "~1.0.0"
   },
   "authors": [
     {
