@@ -9,9 +9,9 @@
 namespace Mrden\MkadDistance;
 
 use Desarrolla2\Cache\File;
-use Desarrolla2\Cache\Predis;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use Mrden\MkadDistance\Cache\DistancePredis;
 use Mrden\MkadDistance\Exceptions\DistanceRequestException;
 use Mrden\MkadDistance\Geometry\Point;
 use Mrden\MkadDistance\Geometry\Polygon;
@@ -41,7 +41,7 @@ class Distance
     private $yandexGeoCoderApiKey = '';
 
     /**
-     * @var File|Predis
+     * @var File|DistancePredis
      */
     private $cache;
 
@@ -69,7 +69,7 @@ class Distance
 
         // Кэширование в redis или в файлах
         if ($predisClient) {
-            $this->cache = new Predis($predisClient);
+            $this->cache = new DistancePredis($predisClient);
         } else {
             $cacheDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'cacheForMkad';
             if (!file_exists($cacheDir)) {
@@ -166,7 +166,7 @@ class Distance
                 $target->getLat()
             );
             $cacheKey = $this->cachePrefix . '.osrm.' . md5($url);
-            if ($this->cache instanceof Predis) {
+            if ($this->cache instanceof DistancePredis) {
                 $cacheKey = $this->cachePrefix . ':osrm:' . md5($url);
             }
             if ($this->cache->has($cacheKey)) {
