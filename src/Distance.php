@@ -11,6 +11,8 @@ namespace Mrden\MkadDistance;
 use Desarrolla2\Cache\File;
 use Desarrolla2\Cache\Predis;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use Mrden\MkadDistance\Exceptions\DistanceRequestException;
 use Mrden\MkadDistance\Geometry\Point;
 use Mrden\MkadDistance\Geometry\Polygon;
 use Psr\SimpleCache\InvalidArgumentException;
@@ -39,9 +41,10 @@ class Distance
     private $yandexGeoCoderApiKey = '';
 
     /**
-     * @var File
+     * @var File|Predis
      */
     private $cache;
+
     /**
      * Время хранения кэша.
      * По-умолчанию 5 дней
@@ -50,11 +53,17 @@ class Distance
     private $cacheTtl = 5 * 24 * 60 * 60;
 
     /**
+     * @var string
+     */
+    private $cachePrefix;
+
+    /**
      * Distance constructor.
      * @param string $yandexGeoCoderApiKey
      * @param \Predis\Client|null $predisClient
+     * @param string $cachePrefix
      */
-    public function __construct(string $yandexGeoCoderApiKey = '', \Predis\Client $predisClient = null)
+    public function __construct(string $yandexGeoCoderApiKey = '', \Predis\Client $predisClient = null, $cachePrefix = '')
     {
         $this->yandexGeoCoderApiKey = $yandexGeoCoderApiKey;
 
@@ -68,6 +77,7 @@ class Distance
             }
             $this->cache = new File($cacheDir);
         }
+        $this->cachePrefix = $cachePrefix;
     }
 
     /**
@@ -139,7 +149,8 @@ class Distance
         }
 
         ksort($neededMkadCoordinates);
-
+        // Расстояние по прямой от целевой точки до самой ближайшей развязки на МКАД
+        $mkadLineDistance = array_key_first($neededMkadCoordinates);
         $client = new Client();
         $current = 0;
         // Учитываем $limit ближайших (по расстоянию по прямой) развязок для расчета расстояний от них
@@ -154,11 +165,18 @@ class Distance
                 $target->getLon(),
                 $target->getLat()
             );
-            $cacheKey = 'osrm.' . md5($url);
+            $cacheKey = $this->cachePrefix . '.osrm.' . md5($url);
+            if ($this->cache instanceof Predis) {
+                $cacheKey = $this->cachePrefix . ':osrm:' . md5($url);
+            }
             if ($this->cache->has($cacheKey)) {
                 $resJson = $this->cache->get($cacheKey);
             } else {
-                $response = $client->get($url);
+                try {
+                    $response = $client->get($url);
+                } catch (RequestException $e) {
+                    throw new DistanceRequestException($e->getMessage(), $e->getCode(), $e, $mkadLineDistance);
+                }
                 $resJson = json_decode((string)$response->getBody(), true);
                 $this->cache->set($cacheKey, $resJson, $this->cacheTtl);
             }
