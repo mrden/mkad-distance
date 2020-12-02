@@ -12,6 +12,7 @@ use Desarrolla2\Cache\File;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Mrden\MkadDistance\Cache\DistancePredis;
+use Mrden\MkadDistance\Exceptions\DistanceExceptions;
 use Mrden\MkadDistance\Exceptions\DistanceRequestException;
 use Mrden\MkadDistance\Geometry\Point;
 use Mrden\MkadDistance\Geometry\Polygon;
@@ -84,49 +85,12 @@ class Distance
      * Рассчитать расстояние за МКАД в метрах
      * @param array|Point|string $param
      * @return null|float
-     * @throws Exceptions\DistanceExceptions
+     * @throws DistanceExceptions
      * @throws InvalidArgumentException
      */
     public function calculate($param)
     {
-        $target = null;
-        if ($param instanceof Point) {
-            $target = $param;
-        } elseif (is_array($param)) {
-            $target = Point::createFromArray($param);
-        } elseif (is_string($param) && $this->yandexGeoCoderApiKey) {
-            $cacheKey = 'geocoder.' . md5(strtolower($param));
-            if ($this->cache->has($cacheKey)) {
-                $response = $this->cache->get($cacheKey);
-            } else {
-                $api = new Api();
-                $api->setToken($this->yandexGeoCoderApiKey);
-                try {
-                    $response = $api->setToken($this->yandexGeoCoderApiKey)
-                        ->setQuery($param)
-                        ->setLimit(1)
-                        ->load()
-                        ->getResponse();
-
-                    $this->cache->set($cacheKey, $response, $this->cacheTtl);
-                } catch (Exception $e) {
-                    throw new Exceptions\DistanceExceptions($e->getMessage(), $e->getCode(), $e);
-                }
-            }
-
-            if ($response && $response->getList()) {
-                $target = Point::createFromArray([
-                    $response->getList()[0]->getData()['Latitude'],
-                    $response->getList()[0]->getData()['Longitude'],
-                ]);
-            } else {
-                throw new Exceptions\DistanceExceptions('No result from GeoCoder.');
-            }
-        }
-
-        if (!$target) {
-            throw new Exceptions\DistanceExceptions('Target point not detected.');
-        }
+        $target = $this->initPoint($param);
 
         // Определение внутри МКАД или снаружи
         $innerMkad = (new Polygon(self::MKAD_POLYGON_DATA))->isInner($target);
@@ -189,6 +153,56 @@ class Distance
         }
 
         return (float)min($mkadPintsDistances);
+    }
+
+    /**
+     * @param $param
+     * @return Point
+     * @throws DistanceExceptions
+     * @throws InvalidArgumentException
+     */
+    private function initPoint($param)
+    {
+        $target = null;
+        if ($param instanceof Point) {
+            $target = $param;
+        } elseif (is_array($param)) {
+            $target = Point::createFromArray($param);
+        } elseif (is_string($param) && $this->yandexGeoCoderApiKey) {
+            $cacheKey = 'geocoder.' . md5(strtolower($param));
+            if ($this->cache->has($cacheKey)) {
+                $response = $this->cache->get($cacheKey);
+            } else {
+                $api = new Api();
+                $api->setToken($this->yandexGeoCoderApiKey);
+                try {
+                    $response = $api->setToken($this->yandexGeoCoderApiKey)
+                        ->setQuery($param)
+                        ->setLimit(1)
+                        ->load()
+                        ->getResponse();
+
+                    $this->cache->set($cacheKey, $response, $this->cacheTtl);
+                } catch (Exception $e) {
+                    throw new DistanceExceptions($e->getMessage(), $e->getCode(), $e);
+                }
+            }
+
+            if ($response && $response->getList()) {
+                $target = Point::createFromArray([
+                    $response->getList()[0]->getData()['Latitude'],
+                    $response->getList()[0]->getData()['Longitude'],
+                ]);
+            } else {
+                throw new DistanceExceptions('No result from GeoCoder.');
+            }
+        }
+
+        if ($target === null) {
+            throw new DistanceExceptions('Target point not detected.');
+        }
+
+        return $target;
     }
 
     /**
