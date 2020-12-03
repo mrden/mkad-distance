@@ -19,7 +19,7 @@ class Polygon
      * Polygon constructor.
      * @param Point[]|array $vertices
      */
-    public function __construct(array $vertices)
+    public function __construct(array $vertices = [])
     {
         if (empty($vertices)) {
             return;
@@ -35,10 +35,18 @@ class Polygon
     }
 
     /**
+     * @return Point[]
+     */
+    public function getVertices(): array
+    {
+        return $this->vertices;
+    }
+
+    /**
      * @param Point $point
      * @return bool
      */
-    public function pointOnVertex(Point $point)
+    public function pointOnVertex(Point $point): bool
     {
         foreach ($this->vertices as $vertex) {
             if (Point::compare($point, $vertex)) {
@@ -54,7 +62,7 @@ class Polygon
      * @param Point $point
      * @return bool
      */
-    public function isInner(Point $point)
+    public function isInner(Point $point): bool
     {
         // Check if the point sits exactly on a vertex
         if ($this->pointOnVertex($point) === true) {

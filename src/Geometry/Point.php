@@ -90,7 +90,7 @@ class Point
     }
 
     /**
-     * @param array $coordinate
+     * @param array|float[] $coordinate
      * @return Point
      */
     public static function createFromArray(array $coordinate)
