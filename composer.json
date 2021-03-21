@@ -9,7 +9,7 @@
         "расстояние",
         "расстояние за мкад"
     ],
-    "license": "MIT License",
+    "license": "MIT",
     "require": {
         "php": ">=7.3.0",
         "ext-curl": "*",
