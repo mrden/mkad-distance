@@ -8,7 +8,7 @@
 
 namespace Mrden\MkadDistance\Exceptions;
 
-class InnerMkadException extends DistanceExceptions
+class InnerMkadException extends DistanceException
 {
 
 }

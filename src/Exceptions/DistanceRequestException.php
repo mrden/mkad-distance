@@ -2,14 +2,15 @@
 
 namespace Mrden\MkadDistance\Exceptions;
 
+use Mrden\MkadDistance\Geometry\DistanceBetweenPoints;
 use Throwable;
 
-class DistanceRequestException extends DistanceExceptions
+class DistanceRequestException extends DistanceException
 {
     /**
-     * @var float
+     * @var DistanceBetweenPoints|null
      */
-    private $lineDistance = 0.0;
+    private $lineDistance;
 
     /**
      * DistanceRequestException constructor.
@@ -18,16 +19,16 @@ class DistanceRequestException extends DistanceExceptions
      * @param Throwable|null $previous
      * @param $lineDistance
      */
-    public function __construct($message = "", $code = 0, Throwable $previous = null, $lineDistance = 0.0)
+    public function __construct($message = '', $code = 0, Throwable $previous = null, DistanceBetweenPoints $lineDistance = null)
     {
         $this->lineDistance = $lineDistance;
         parent::__construct($message, $code, $previous);
     }
 
     /**
-     * @return float
+     * @return DistanceBetweenPoints|null
      */
-    public function getLineDistance()
+    public function getLineDistance(): ?DistanceBetweenPoints
     {
         return $this->lineDistance;
     }

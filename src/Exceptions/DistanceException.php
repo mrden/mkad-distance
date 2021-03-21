@@ -10,7 +10,7 @@ namespace Mrden\MkadDistance\Exceptions;
 
 use Exception;
 
-class DistanceExceptions extends Exception
+class DistanceException extends Exception
 {
 
 }

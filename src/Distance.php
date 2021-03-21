@@ -8,29 +8,38 @@
 
 namespace Mrden\MkadDistance;
 
+use Desarrolla2\Cache\AbstractCache;
 use Desarrolla2\Cache\File;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
+use Exception;
 use Mrden\MkadDistance\Cache\DistancePredis;
-use Mrden\MkadDistance\Exceptions\DistanceExceptions;
+use Mrden\MkadDistance\Exceptions\DistanceException;
 use Mrden\MkadDistance\Exceptions\DistanceRequestException;
+use Mrden\MkadDistance\Exceptions\RouteNotFoundException;
+use Mrden\MkadDistance\Geometry\DistanceBetweenPoints;
 use Mrden\MkadDistance\Geometry\Point;
 use Mrden\MkadDistance\Geometry\Polygon;
+use Mrden\MkadDistance\Route\Route;
+use Predis\Client;
 use Psr\SimpleCache\InvalidArgumentException;
 use Yandex\Geo\Api;
-use Yandex\Geo\Exception;
+use Yandex\Geo\Exception as YandexGeoException;
 
 class Distance
 {
     /**
+     * Радиус Земли
+     * @var float
+     */
+    public const EARTH_RADIUS = 6372795.0;
+    /**
      * Москва МКАД
      */
-    const TYPE_MSC_MKAD = 1;
+    public const TYPE_MSC_MKAD = 1;
 
     /**
      * Питер КАД
      */
-    const TYPE_SPB_KAD = 2;
+    public const TYPE_SPB_KAD = 2;
 
     /**
      * API-ключ Яндекс.Карт, получить можно тут https://developer.tech.yandex.ru/services/
@@ -58,13 +67,12 @@ class Distance
     /**
      * Distance constructor.
      * @param string $yandexGeoCoderApiKey
-     * @param \Predis\Client|null $predisClient
+     * @param Client|null $predisClient
      * @param string $cachePrefix
      */
-    public function __construct(string $yandexGeoCoderApiKey = '', \Predis\Client $predisClient = null, $cachePrefix = '')
+    public function __construct(string $yandexGeoCoderApiKey = '', Client $predisClient = null, $cachePrefix = '')
     {
         $this->yandexGeoCoderApiKey = $yandexGeoCoderApiKey;
-
         // Кэширование в redis или в файлах
         if ($predisClient) {
             $this->cache = new DistancePredis($predisClient);
@@ -79,14 +87,119 @@ class Distance
     }
 
     /**
+     * Расстояние по прямой между двумя точками
+     * @param Point $from
+     * @param Point $to
+     * @return DistanceBetweenPoints
+     */
+    public static function calculateLineDistance(Point $from, Point $to): DistanceBetweenPoints
+    {
+        // перевести координаты в радианы
+        $lat1 = $from->getLat() * M_PI / 180;
+        $lat2 = $to->getLat() * M_PI / 180;
+        $long1 = $from->getLon() * M_PI / 180;
+        $long2 = $to->getLon() * M_PI / 180;
+        // косинусы и синусы широт и разницы долгот
+        $cl1 = cos($lat1);
+        $cl2 = cos($lat2);
+        $sl1 = sin($lat1);
+        $sl2 = sin($lat2);
+        $delta = $long2 - $long1;
+        $cdelta = cos($delta);
+        $sdelta = sin($delta);
+        // вычисления длины большого круга
+        $y = sqrt(pow($cl2 * $sdelta, 2) + pow($cl1 * $sl2 - $sl1 * $cl2 * $cdelta, 2));
+        $x = $sl1 * $sl2 + $cl1 * $cl2 * $cdelta;
+        $ad = atan2($y, $x);
+        return new DistanceBetweenPoints($from, $to, $ad * self::EARTH_RADIUS);
+    }
+
+    /**
+     * @param Point $from
+     * @param Point $to
+     * @param AbstractCache $cache
+     * @param string $cachePrefix
+     * @param int $cacheTtl
+     * @return DistanceBetweenPoints
+     * @throws DistanceRequestException
+     * @throws InvalidArgumentException
+     */
+    public static function calculateRouteDistance(
+        Point $from,
+        Point $to,
+        AbstractCache $cache,
+        string $cachePrefix = '',
+        int $cacheTtl = 5 * 24 * 60 * 60
+    ): DistanceBetweenPoints {
+        $route = new Route();
+        $route->setOverview('false');
+        $coordinates = sprintf('%s;%s', $from, $to);
+        $route->setCoordinates($coordinates);
+        $cacheKey = $cachePrefix . '.osrm.' . md5($route->getUri());
+        if ($cache instanceof DistancePredis) {
+            $cacheKey = str_replace('.osrm.', ':osrm:', $cacheKey);
+        }
+        if ($cache->has($cacheKey)) {
+            $result = $cache->get($cacheKey);
+        } else {
+            try {
+                $response = $route->fetch($coordinates);
+                if ($response->isOK()) {
+                    $result = $response->toArray();
+                    if (!isset($result['routes']) || empty($result['routes'])) {
+                        throw new DistanceException('Bad response.');
+                    }
+                    $cache->set($cacheKey, $result, $cacheTtl);
+                } else {
+                    throw new RouteNotFoundException('Route not found.');
+                }
+            } catch (Exception $e) {
+                throw new DistanceRequestException(
+                    $e->getMessage(),
+                    $e->getCode(),
+                    $e,
+                    self::calculateLineDistance($from, $to)
+                );
+            }
+        }
+        return new DistanceBetweenPoints($from, $to, (float)$result['routes'][0]['distance']);
+    }
+
+    /**
+     * @param DistanceBetweenPoints[] $distances
+     * @return DistanceBetweenPoints|null
+     */
+    private function findMinDistance(array $distances): ?DistanceBetweenPoints
+    {
+        if (empty($distances)) {
+            return null;
+        }
+        if (!$distances[array_key_first($distances)] instanceof DistanceBetweenPoints) {
+            throw new \InvalidArgumentException(
+                sprintf('Element from array most be %s type', DistanceBetweenPoints::class)
+            );
+        }
+        $min = null;
+        foreach ($distances as $distance) {
+            if ($min === null || $min->getDistance() > $distance->getDistance()) {
+                $min = $distance;
+            }
+        }
+        return $min;
+    }
+
+    /**
      * Рассчитать расстояние за МКАД в метрах
      * @param array|Point|string $param
      * @param int $type
-     * @return null|float
-     * @throws DistanceExceptions
+     * @param bool $calcRouteDistance
+     * @return DistanceBetweenPoints
+     * @throws DistanceException
+     * @throws DistanceRequestException
+     * @throws Exceptions\InnerMkadException
      * @throws InvalidArgumentException
      */
-    public function calculate($param, int $type = self::TYPE_MSC_MKAD)
+    public function calculate($param, int $type = self::TYPE_MSC_MKAD, bool $calcRouteDistance = true): DistanceBetweenPoints
     {
         $target = $this->createPoint($param);
         $polygon = $this->createPolygon($type);
@@ -99,61 +212,49 @@ class Distance
         }
 
         $polygonJunctions = $this->createJunctionsPolygon($type);
-        $neededMkadCoordinates = [];
+        $mkadLineDistances = [];
         // Процесс отсечения самых дальних точек развязок на МКАД
         foreach ($polygonJunctions->getVertices() as $vertex) {
-            $lineDistance = $vertex->distanceToPoint($target);
-            $neededMkadCoordinates[$lineDistance] = $vertex;
+            $mkadLineDistances[] = self::calculateLineDistance($vertex, $target);
         }
-        ksort($neededMkadCoordinates);
         // Расстояние по прямой от целевой точки до самой ближайшей развязки на МКАД
-        $mkadLineDistance = array_key_first($neededMkadCoordinates);
-        $client = new Client();
+        $minMkadLineDistance = $this->findMinDistance($mkadLineDistances);
         $current = 0;
         // Учитываем $limit ближайших (по расстоянию по прямой) развязок для расчета расстояний от них
         $limit = 6;
-        $mkadPintsDistances = [];
+        $mkadRouteDistances = [];
 
-        foreach ($neededMkadCoordinates as $lineDistance => $mkadJunctionsPoint) {
-            $url = sprintf(
-                "https://router.project-osrm.org/route/v1/driving/%s,%s;%s,%s?overview=false",
-                $mkadJunctionsPoint->getLon(),
-                $mkadJunctionsPoint->getLat(),
-                $target->getLon(),
-                $target->getLat()
-            );
-            $cacheKey = $this->cachePrefix . '.osrm.' . md5($url);
-            if ($this->cache instanceof DistancePredis) {
-                $cacheKey = $this->cachePrefix . ':osrm:' . md5($url);
+        if (!$calcRouteDistance) {
+            return $minMkadLineDistance;
+        }
+
+        foreach ($mkadLineDistances as $lineDistance => $mkadLineDistance) {
+            try {
+                $mkadRouteDistances[] = self::calculateRouteDistance(
+                    $mkadLineDistance->getFrom(),
+                    $mkadLineDistance->getTo(),
+                    $this->cache,
+                    $this->cachePrefix,
+                    $this->cacheTtl
+                );
+            } catch (Exception $e) {
+                throw new DistanceRequestException($e->getMessage(), $e->getCode(), $e, $minMkadLineDistance);
             }
-            if ($this->cache->has($cacheKey)) {
-                $resJson = $this->cache->get($cacheKey);
-            } else {
-                try {
-                    $response = $client->get($url);
-                } catch (RequestException $e) {
-                    throw new DistanceRequestException($e->getMessage(), $e->getCode(), $e, $mkadLineDistance);
-                }
-                $resJson = json_decode((string)$response->getBody(), true);
-                $this->cache->set($cacheKey, $resJson, $this->cacheTtl);
-            }
-            $mkadPintsDistances[$lineDistance] = $resJson['routes'][0]['distance'];
             $current++;
-
             if ($current >= $limit) {
                 break;
             }
         }
 
-        return (float)min($mkadPintsDistances);
+        return $this->findMinDistance($mkadRouteDistances);
     }
 
     /**
      * @param $type
      * @return Polygon
-     * @throws DistanceExceptions
+     * @throws DistanceException
      */
-    private function createJunctionsPolygon($type)
+    private function createJunctionsPolygon($type): Polygon
     {
         switch ($type) {
             case self::TYPE_MSC_MKAD:
@@ -161,16 +262,16 @@ class Distance
             case self::TYPE_SPB_KAD:
                 return new Polygon\SpbKadJunctions();
             default:
-                throw new DistanceExceptions('Not detected junctions coordinates current KAD type.');
+                throw new DistanceException('Not detected junctions coordinates current KAD type.');
         }
     }
 
     /**
      * @param int $type
      * @return Polygon
-     * @throws DistanceExceptions
+     * @throws DistanceException
      */
-    private function createPolygon(int $type)
+    private function createPolygon(int $type): Polygon
     {
         switch ($type) {
             case self::TYPE_MSC_MKAD:
@@ -178,17 +279,17 @@ class Distance
             case self::TYPE_SPB_KAD:
                 return new Polygon\SpbKad();
             default:
-                throw new DistanceExceptions('Not detected coordinates current KAD type.');
+                throw new DistanceException('Not detected coordinates current KAD type.');
         }
     }
 
     /**
      * @param Point|float[]|string $param
      * @return Point
-     * @throws DistanceExceptions
+     * @throws DistanceException
      * @throws InvalidArgumentException
      */
-    private function createPoint($param)
+    private function createPoint($param): Point
     {
         $target = null;
         if ($param instanceof Point) {
@@ -213,8 +314,8 @@ class Distance
                         ->getResponse();
 
                     $this->cache->set($cacheKey, $response, $this->cacheTtl);
-                } catch (Exception $e) {
-                    throw new DistanceExceptions($e->getMessage(), $e->getCode(), $e);
+                } catch (YandexGeoException $e) {
+                    throw new DistanceException($e->getMessage(), $e->getCode(), $e);
                 }
             }
 
@@ -224,12 +325,12 @@ class Distance
                     $response->getList()[0]->getData()['Longitude'],
                 ]);
             } else {
-                throw new DistanceExceptions('No result from GeoCoder.');
+                throw new DistanceException('No result from GeoCoder.');
             }
         }
 
         if ($target === null) {
-            throw new DistanceExceptions('Target point not detected.');
+            throw new DistanceException('Target point not detected.');
         }
 
         return $target;
