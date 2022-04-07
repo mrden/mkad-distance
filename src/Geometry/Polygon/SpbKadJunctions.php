@@ -5,9 +5,9 @@ namespace Mrden\MkadDistance\Geometry\Polygon;
 
 use Mrden\MkadDistance\Geometry\Polygon;
 
-class SpbKadJunctions extends Polygon
+final class SpbKadJunctions extends Polygon
 {
-    const POLYGON_DATA = [
+    private const POLYGON_DATA = [
         [60.038298, 29.968254],
         [60.038866, 29.973156],
         [60.039200, 30.000145],
