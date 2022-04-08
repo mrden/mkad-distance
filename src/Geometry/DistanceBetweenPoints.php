@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Mrden\MkadDistance\Geometry;
 
 class DistanceBetweenPoints

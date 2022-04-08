@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Denis Kiselev
- * Date: 10.06.2020
- * Time: 18:21
- */
 
 namespace Mrden\MkadDistance\Geometry;
 
