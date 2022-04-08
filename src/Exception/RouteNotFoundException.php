@@ -1,7 +1,6 @@
 <?php
 
-
-namespace Mrden\MkadDistance\Exceptions;
+namespace Mrden\MkadDistance\Exception;
 
 class RouteNotFoundException extends DistanceException
 {

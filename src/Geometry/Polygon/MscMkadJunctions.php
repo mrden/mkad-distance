@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Mrden\MkadDistance\Geometry\Polygon;
 
 use Mrden\MkadDistance\Geometry\Polygon;
@@ -109,5 +108,10 @@ final class MscMkadJunctions extends Polygon
     public function __construct()
     {
         parent::__construct(self::POLYGON_DATA);
+    }
+
+    public function __toString()
+    {
+        return 'Moscow MKAD Junctions';
     }
 }
