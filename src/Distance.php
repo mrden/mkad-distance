@@ -228,7 +228,15 @@ class Distance
             return $minMkadLineDistance;
         }
 
-        foreach ($mkadLineDistances as $lineDistance => $mkadLineDistance) {
+        // Сортируем массив расстояний до развязок по возрастанию
+        usort($mkadLineDistances, function (DistanceBetweenPoints $distance1, DistanceBetweenPoints $distance2) {
+            if ($distance1->getDistance() == $distance2->getDistance()) {
+                return 0;
+            }
+            return ($distance1->getDistance() < $distance2->getDistance()) ? -1 : 1;
+        });
+
+        foreach ($mkadLineDistances as $mkadLineDistance) {
             try {
                 $mkadRouteDistances[] = self::calculateRouteDistance(
                     $mkadLineDistance->getFrom(),
