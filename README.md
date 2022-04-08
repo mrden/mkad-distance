@@ -10,16 +10,28 @@
 
 ```php
 use Mrden\MkadDistance\Distance;
-$distance = new Distance();
+// Расчет по массиву координат
+$distance = Distance::createMoscowMkadCalculator(
+    [55.860297, 37.120094]
+)->calculate();
 
-// Расчет по координатам
-$res = $distance->calculate([55.860297, 37.120094]);
+// Расчет по экземпляру класса \Mrden\MkadDistance\Geometry\Point
+$distance = Distance::createMoscowMkadCalculator(
+    new \Mrden\MkadDistance\Geometry\Point(55.860297, 37.120094)
+)->calculate();
 
 // Расчет по текстовому названию
-$distance->setYandexGeoCoderApiKey('YOUR_TOKEN');
-// Расчет для МКАД
-$res = $distance->calculate('Московская область, городской округ Истра, Дедовск, улица Гагарина, 14');
-// Расчет для КАД в Санкт-Петербурге
-$res = $distance->calculate('Санкт-Петербург, посёлок Песочный, Советская улица, 34/21', Distance::TYPE_SPB_KAD);
+$distance = Distance::createSpbKadCalculator(
+    'Санкт-Петербург, посёлок Песочный, Советская улица, 34/21',
+    ['yandexGeoCoderApiKey' => 'YOUR_TOKEN']   
+)->calculate();
+
+// Cache
+$cache = new AnySimpleCacheInterfaceRealisation();
+$distance = Distance::createMoscowMkadCalculator(
+    new \Mrden\MkadDistance\Geometry\Point(55.860297, 37.120094),
+    ['cache' => $cache]
+)->calculate();
+
 ```
 
