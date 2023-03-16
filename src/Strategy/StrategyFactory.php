@@ -24,7 +24,8 @@ class StrategyFactory
      * @throws InvalidArgumentException
      */
     public function create(
-        $target, Polygon $basePolygon,
+        $target,
+        Polygon $basePolygon,
         Polygon $junctionsPolygon
     ): ?DistanceCalculatorStrategy
     {
