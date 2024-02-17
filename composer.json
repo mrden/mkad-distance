@@ -2,7 +2,7 @@
     "name": "mrden/mkad-distance",
     "description": "Расчет расстояний за МКАД",
     "type": "library",
-    "version": "2.0.1",
+    "version": "3.0.0",
     "keywords": [
         "distance",
         "mkad",
@@ -11,14 +11,8 @@
         "расстояние за мкад"
     ],
     "license": "MIT",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/mrden/php-osrm"
-        }
-    ],
     "require": {
-        "php": "^7.3 || ^8.0",
+        "php": "^7.3",
         "ext-curl": "*",
         "ext-json": "*",
         "yandex/geo": "*",
