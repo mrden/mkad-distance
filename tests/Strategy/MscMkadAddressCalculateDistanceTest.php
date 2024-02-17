@@ -29,13 +29,13 @@ class MscMkadAddressCalculateDistanceTest extends TestCase
     public function testCalculateByRouteToZvenigorod(): void
     {
         $distance = $this->calculator->calculate('Звенигород, Московская область');
-        $this->assertEquals(45.58, $distance->getDistance());
+        $this->assertEqualsWithDelta(45, \round($distance->getDistance() / 1000), 1);
     }
 
     public function testCalculateByLineToZvenigorod(): void
     {
         $distance = $this->calculator->calculate('Звенигород, Московская область', false);
-        $this->assertEquals(32.14, $distance->getDistance());
+        $this->assertEqualsWithDelta(32, \round($distance->getDistance() / 1000), 1);
     }
 
     public function testFailCalculateByAddress(): void

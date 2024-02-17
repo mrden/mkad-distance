@@ -28,7 +28,8 @@ class SpbKadCalculateDistanceTest extends TestCase
     public function testCalculateAddress()
     {
         $distance = Distance::calculateByRouteSpbKadCalculator(
-            'Всеволожск, Ленинградская область', [
+            'Всеволожск, Ленинградская область',
+            [
                 'yandexGeoCoderApiKey' => $this->getYandexGeoCoderApiKey(),
             ]
         );

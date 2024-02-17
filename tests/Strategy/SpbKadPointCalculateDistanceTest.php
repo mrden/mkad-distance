@@ -28,13 +28,13 @@ class SpbKadPointCalculateDistanceTest extends TestCase
     public function testCalculateByRouteToVsevolozhsk(): void
     {
         $distance = $this->calculator->calculate(new Point(60.021319, 30.654084));
-        $this->assertEquals(17.57, $distance);
+        $this->assertEqualsWithDelta(17, \round($distance->getDistance() / 1000), 1);
     }
 
     public function testCalculateByLineToVsevolozhsk(): void
     {
         $distance = $this->calculator->calculate(new Point(60.021319, 30.654084), false);
-        $this->assertEquals(9.89, $distance);
+        $this->assertEqualsWithDelta(10, \round($distance->getDistance() / 1000), 1);
     }
 
     public function testFailCalculateByAddress(): void

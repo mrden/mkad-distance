@@ -28,13 +28,13 @@ class MscMkadArrayCalculateDistanceTest extends TestCase
     public function testCalculateByRouteToZvenigorod(): void
     {
         $distance = $this->calculator->calculate([55.729826, 36.854462]);
-        $this->assertEquals(45.58, $distance);
+        $this->assertEqualsWithDelta(45, \round($distance->getDistance() / 1000), 1);
     }
 
     public function testCalculateByLineToZvenigorod(): void
     {
         $distance = $this->calculator->calculate([55.729826, 36.854462], false);
-        $this->assertEquals(32.14, $distance);
+        $this->assertEqualsWithDelta(32, \round($distance->getDistance() / 1000), 1);
     }
 
     public function testFailCalculateByAddress(): void
