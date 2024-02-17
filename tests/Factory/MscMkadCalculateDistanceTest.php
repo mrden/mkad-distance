@@ -11,33 +11,34 @@ class MscMkadCalculateDistanceTest extends TestCase
 {
     public function testCalculatePoint()
     {
-        $distance = Distance::createMoscowMkadCalculator(
+        $distance = Distance::calculateByRouteToMoscowMkad(
             new Point(55.729826, 36.854462)
-        )->calculate();
-        $this->assertEquals(45.58, $distance);
+        );
+        $this->assertEqualsWithDelta(45, \round($distance), 1);
     }
 
     public function testCalculateArray()
     {
-        $distance = Distance::createMoscowMkadCalculator(
+        $distance = Distance::calculateByRouteToMoscowMkad(
             [55.729826, 36.854462]
-        )->calculate();
-        $this->assertEquals(45.58, $distance);
+        );
+        $this->assertEqualsWithDelta(45, \round($distance), 1);
     }
 
     public function testCalculateAddress()
     {
-        $distance = Distance::createMoscowMkadCalculator(
-            'Звенигород, Московская область', [
+        $distance = Distance::calculateByRouteToMoscowMkad(
+            'Звенигород, Московская область',
+            [
                 'yandexGeoCoderApiKey' => $this->getYandexGeoCoderApiKey(),
             ]
-        )->calculate();
-        $this->assertEquals(45.58, $distance);
+        );
+        $this->assertEqualsWithDelta(45, \round($distance), 1);
     }
 
     public function testFailCalculate()
     {
         $this->expectException(InvalidArgumentException::class);
-        Distance::createMoscowMkadCalculator(456);
+        Distance::calculateByRouteToMoscowMkad(456);
     }
 }

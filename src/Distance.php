@@ -2,71 +2,84 @@
 
 namespace Mrden\MkadDistance;
 
-use InvalidArgumentException;
 use Mrden\MkadDistance\Geometry\Point;
 use Mrden\MkadDistance\Geometry\Polygon\MscMkad;
 use Mrden\MkadDistance\Geometry\Polygon\MscMkadJunctions;
 use Mrden\MkadDistance\Geometry\Polygon\SpbKad;
 use Mrden\MkadDistance\Geometry\Polygon\SpbKadJunctions;
-use Mrden\MkadDistance\Iterface\DistanceCalculatorStrategy;
-use Mrden\MkadDistance\Strategy\StrategyFactory;
+use Mrden\MkadDistance\Contracts\DistanceCalculator;
+use Mrden\MkadDistance\Calculator\StrategyCalculatorFactory;
 
 class Distance
 {
     /**
-     * @var DistanceCalculatorStrategy
+     * @var DistanceCalculator
      */
     private $calculator;
 
-    /**
-     * @var string|array|Point
-     */
-    private $target;
-
-    public function __construct(DistanceCalculatorStrategy $calculator, $target = null)
+    public function __construct(DistanceCalculator $calculator)
     {
         $this->calculator = $calculator;
-        $this->target = $target;
     }
 
     /**
      * Distance in kilometers
-     * @param bool $calByRoutes
-     * @return float
+     * @param Point|array{0: float, 1: float}|string $target
      */
-    public function calculate(bool $calByRoutes = true): float
+    public function calculate($target, bool $calcByRoutes = true): float
     {
-        return round($this->calculator->calculate($this->target, $calByRoutes)->getDistance() / 1000, 2);
+        return \round($this->calculator->calculate($target, $calcByRoutes)->getDistance() / 1000, 2);
     }
 
     /**
-     * @param $target
-     * @param array $options
-     * @return static
-     * @throws InvalidArgumentException
+     * @param Point|array{0: float, 1: float}|string $target
      */
-    public static function createMoscowMkadCalculator($target, array $options = []): Distance
+    public static function calculateByRouteToMoscowMkad($target, array $options = []): float
     {
-        $strategyFactory = new StrategyFactory($options);
-        return new Distance(
-            $strategyFactory->create($target, new MscMkad(), new MscMkadJunctions()),
-            $target
-        );
+        $strategyFactory = new StrategyCalculatorFactory($options);
+        return (new Distance($strategyFactory->create(
+            $target,
+            new MscMkad(),
+            new MscMkadJunctions()
+        )))->calculate($target);
     }
 
     /**
-     * @param $target
-     * @param array $options
-     * @return Distance
-     * @throws InvalidArgumentException
+     * @param Point|array{0: float, 1: float}|string $target
      */
-    public static function createSpbKadCalculator($target, array $options = []): Distance
+    public static function calculateByLineToMoscowMkad($target, array $options = []): float
     {
-        $strategyFactory = new StrategyFactory($options);
-        return new Distance(
-            $strategyFactory->create($target, new SpbKad(), new SpbKadJunctions()),
-            $target
-        );
+        $strategyFactory = new StrategyCalculatorFactory($options);
+        return (new Distance($strategyFactory->create(
+            $target,
+            new MscMkad(),
+            new MscMkadJunctions()
+        )))->calculate($target, false);
     }
 
+    /**
+     * @param Point|array{0: float, 1: float}|string $target
+     */
+    public static function calculateByRouteSpbKadCalculator($target, array $options = []): float
+    {
+        $strategyFactory = new StrategyCalculatorFactory($options);
+        return (new Distance($strategyFactory->create(
+            $target,
+            new SpbKad(),
+            new SpbKadJunctions()
+        )))->calculate($target);
+    }
+
+    /**
+     * @param Point|array{0: float, 1: float}|string $target
+     */
+    public static function calculateByLineSpbKadCalculator($target, array $options = []): float
+    {
+        $strategyFactory = new StrategyCalculatorFactory($options);
+        return (new Distance($strategyFactory->create(
+            $target,
+            new SpbKad(),
+            new SpbKadJunctions()
+        )))->calculate($target, false);
+    }
 }

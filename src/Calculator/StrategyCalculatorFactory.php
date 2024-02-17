@@ -1,13 +1,12 @@
 <?php
 
-namespace Mrden\MkadDistance\Strategy;
+namespace Mrden\MkadDistance\Calculator;
 
-use InvalidArgumentException;
 use Mrden\MkadDistance\Geometry\Point;
 use Mrden\MkadDistance\Geometry\Polygon;
-use Mrden\MkadDistance\Iterface\DistanceCalculatorStrategy;
+use Mrden\MkadDistance\Contracts\DistanceCalculator;
 
-class StrategyFactory
+class StrategyCalculatorFactory
 {
     private $options;
 
@@ -17,29 +16,25 @@ class StrategyFactory
     }
 
     /**
-     * @param $target
-     * @param Polygon $basePolygon
-     * @param Polygon $junctionsPolygon
-     * @return DistanceCalculatorStrategy
-     * @throws InvalidArgumentException
+     * @param Point|array{0: float, 1: float}|string $target
+     * @throws \InvalidArgumentException
      */
     public function create(
         $target,
         Polygon $basePolygon,
         Polygon $junctionsPolygon
-    ): ?DistanceCalculatorStrategy
-    {
+    ): ?DistanceCalculator {
         $cache = $this->options['cache'] ?? null;
 
         if ($target instanceof Point) {
             return new PointDistanceCalculator($basePolygon, $junctionsPolygon, $cache);
         }
 
-        if (is_array($target)) {
+        if (\is_array($target)) {
             return new ArrayDistanceCalculator($basePolygon, $junctionsPolygon, $cache);
         }
 
-        if (is_string($target) && isset($this->options['yandexGeoCoderApiKey'])) {
+        if (\is_string($target) && isset($this->options['yandexGeoCoderApiKey'])) {
             return new AddressDistanceCalculator(
                 (string)$this->options['yandexGeoCoderApiKey'],
                 $basePolygon,
@@ -48,6 +43,6 @@ class StrategyFactory
             );
         }
 
-        throw new InvalidArgumentException('Target param incorrect type');
+        throw new \InvalidArgumentException('Target param incorrect type');
     }
 }

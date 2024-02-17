@@ -6,14 +6,14 @@ use InvalidArgumentException;
 use Mrden\MkadDistance\Geometry\Point;
 use Mrden\MkadDistance\Geometry\Polygon\MscMkad;
 use Mrden\MkadDistance\Geometry\Polygon\MscMkadJunctions;
-use Mrden\MkadDistance\Iterface\DistanceCalculatorStrategy;
-use Mrden\MkadDistance\Strategy\AddressDistanceCalculator;
+use Mrden\MkadDistance\Contracts\DistanceCalculator;
+use Mrden\MkadDistance\Calculator\AddressDistanceCalculator;
 use Tests\TestCase;
 
 class MscMkadAddressCalculateDistanceTest extends TestCase
 {
     /**
-     * @var DistanceCalculatorStrategy
+     * @var DistanceCalculator
      */
     private $calculator;
 
@@ -29,13 +29,13 @@ class MscMkadAddressCalculateDistanceTest extends TestCase
     public function testCalculateByRouteToZvenigorod(): void
     {
         $distance = $this->calculator->calculate('Звенигород, Московская область');
-        $this->assertEquals(45.58, $distance);
+        $this->assertEquals(45.58, $distance->getDistance());
     }
 
     public function testCalculateByLineToZvenigorod(): void
     {
         $distance = $this->calculator->calculate('Звенигород, Московская область', false);
-        $this->assertEquals(32.14, $distance);
+        $this->assertEquals(32.14, $distance->getDistance());
     }
 
     public function testFailCalculateByAddress(): void

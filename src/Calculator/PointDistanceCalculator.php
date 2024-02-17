@@ -1,17 +1,16 @@
 <?php
 
-namespace Mrden\MkadDistance\Strategy;
+namespace Mrden\MkadDistance\Calculator;
 
-use Exception;
-use InvalidArgumentException;
+use Mrden\MkadDistance\Exception\DistanceException;
 use Mrden\MkadDistance\Exception\DistanceRequestException;
 use Mrden\MkadDistance\Exception\InnerPolygonException;
 use Mrden\MkadDistance\Geometry\DistanceBetweenPoints;
 use Mrden\MkadDistance\Geometry\Point;
-use Mrden\MkadDistance\Iterface\DistanceCalculatorStrategy;
-use Psr\SimpleCache\CacheException;
+use Mrden\MkadDistance\Contracts\DistanceCalculator;
+use Psr\SimpleCache\InvalidArgumentException as CacheInvalidArgumentException;
 
-class PointDistanceCalculator extends AbstractDistanceCalculate implements DistanceCalculatorStrategy
+class PointDistanceCalculator extends AbstractDistanceCalculate implements DistanceCalculator
 {
     /**
      * Лимит ближайших (по расстоянию по прямой) развязок для расчета расстояний от них
@@ -20,23 +19,22 @@ class PointDistanceCalculator extends AbstractDistanceCalculate implements Dista
 
     /**
      * @param Point $target
-     * @param bool $calcByRoutes
-     * @return DistanceBetweenPoints
      * @throws DistanceRequestException
      * @throws InnerPolygonException
+     * @throws DistanceException
      */
     public function calculate($target, bool $calcByRoutes = true): DistanceBetweenPoints
     {
         if (!$target instanceof Point) {
-            throw new InvalidArgumentException(
-                sprintf('Target param most be %s type', Point::class)
+            throw new \InvalidArgumentException(
+                \sprintf('Target param must be %s type', Point::class)
             );
         }
         $isInner = $this->basePolygon->isInner($target);
 
         if ($isInner) {
             throw new InnerPolygonException(
-                sprintf('Target point located inside the %s.', $this->basePolygon)
+                \sprintf('Target point located inside the %s.', $this->basePolygon)
             );
         }
 
@@ -54,7 +52,7 @@ class PointDistanceCalculator extends AbstractDistanceCalculate implements Dista
         }
 
         // Сортируем массив расстояний до развязок по возрастанию
-        usort($lineDistancesToJunctions, function (DistanceBetweenPoints $distance1, DistanceBetweenPoints $distance2) {
+        \usort($lineDistancesToJunctions, function (DistanceBetweenPoints $distance1, DistanceBetweenPoints $distance2) {
             if ($distance1->getDistance() == $distance2->getDistance()) {
                 return 0;
             }
@@ -67,13 +65,18 @@ class PointDistanceCalculator extends AbstractDistanceCalculate implements Dista
                     $lineDistance->getFrom(),
                     $lineDistance->getTo()
                 );
-            } catch (Exception|CacheException $e) {
+            } catch (\Exception|CacheInvalidArgumentException $e) {
                 throw new DistanceRequestException($e->getMessage(), $e->getCode(), $e, $minLineDistance);
             }
             $current++;
             if ($current >= self::JUNCTIONS_LIMIT) {
                 break;
             }
+        }
+
+        $result = $this->findMinDistance($routeDistancesToJunctions);
+        if (!$result) {
+            throw new DistanceException('Error calculate');
         }
 
         return $this->findMinDistance($routeDistancesToJunctions);

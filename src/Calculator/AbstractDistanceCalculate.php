@@ -1,6 +1,6 @@
 <?php
 
-namespace Mrden\MkadDistance\Strategy;
+namespace Mrden\MkadDistance\Calculator;
 
 use Mrden\MkadDistance\Exception\DistanceException;
 use Mrden\MkadDistance\Exception\DistanceRequestException;
@@ -9,8 +9,8 @@ use Mrden\MkadDistance\Geometry\DistanceBetweenPoints;
 use Mrden\MkadDistance\Geometry\Point;
 use Mrden\MkadDistance\Geometry\Polygon;
 use OSRM\Service\RouteService;
+use Psr\SimpleCache\InvalidArgumentException as CacheInvalidArgumentException;
 use Psr\SimpleCache\CacheInterface;
-use Psr\SimpleCache\InvalidArgumentException;
 
 abstract class AbstractDistanceCalculate
 {
@@ -40,16 +40,10 @@ abstract class AbstractDistanceCalculate
      */
     protected $cacheTtl;
 
-    /**
-     * @param Polygon $basePolygon
-     * @param Polygon $junctionsPolygon
-     * @param CacheInterface|null $cache
-     * @param int $cacheTtl
-     */
     public function __construct(
         Polygon $basePolygon,
         Polygon $junctionsPolygon,
-        CacheInterface $cache = null,
+        ?CacheInterface $cache = null,
         int $cacheTtl = 5 * 24 * 60 * 60
     ) {
         $this->basePolygon = $basePolygon;
@@ -58,11 +52,6 @@ abstract class AbstractDistanceCalculate
         $this->cacheTtl = $cacheTtl;
     }
 
-    /**
-     * @param Point $from
-     * @param Point $to
-     * @return DistanceBetweenPoints
-     */
     protected function calculateLineDistance(Point $from, Point $to): DistanceBetweenPoints
     {
         // перевести координаты в радианы
@@ -86,11 +75,8 @@ abstract class AbstractDistanceCalculate
     }
 
     /**
-     * @param Point $from
-     * @param Point $to
-     * @return DistanceBetweenPoints
      * @throws DistanceRequestException
-     * @throws InvalidArgumentException
+     * @throws CacheInvalidArgumentException
      */
     protected function calculateRouteDistance(Point $from, Point $to): DistanceBetweenPoints
     {
@@ -123,24 +109,23 @@ abstract class AbstractDistanceCalculate
                 );
             }
         }
-        return new DistanceBetweenPoints($from, $to, (float)$result['routes'][0]['distance']);
+        return new DistanceBetweenPoints($from, $to, (float)($result['routes'][0]['distance'] ?? 0));
     }
 
     /**
-     * @param DistanceBetweenPoints[] $distances
-     * @return DistanceBetweenPoints|null
+     * @param list<DistanceBetweenPoints> $distances
      */
     protected function findMinDistance(array $distances): ?DistanceBetweenPoints
     {
         if (empty($distances)) {
             return null;
         }
-        $invalidDistances = array_filter($distances, function ($distance) {
+        $invalidDistances = \array_filter($distances, function ($distance) {
             return !$distance instanceof DistanceBetweenPoints;
         });
-        if (empty($invalidDistances) === false) {
+        if (!empty($invalidDistances)) {
             throw new \InvalidArgumentException(
-                sprintf('Element from array most be %s type', DistanceBetweenPoints::class)
+                \sprintf('Element from array must be %s type', DistanceBetweenPoints::class)
             );
         }
         $min = null;

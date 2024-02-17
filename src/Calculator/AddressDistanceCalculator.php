@@ -1,34 +1,25 @@
 <?php
 
-namespace Mrden\MkadDistance\Strategy;
+namespace Mrden\MkadDistance\Calculator;
 
-use InvalidArgumentException;
 use Mrden\MkadDistance\Exception\DistanceException;
 use Mrden\MkadDistance\Exception\InnerPolygonException;
 use Mrden\MkadDistance\Geometry\DistanceBetweenPoints;
 use Mrden\MkadDistance\Geometry\Point;
 use Mrden\MkadDistance\Geometry\Polygon;
-use Psr\SimpleCache\CacheException;
 use Psr\SimpleCache\CacheInterface;
+use Psr\SimpleCache\InvalidArgumentException as CacheInvalidArgumentException;
 use Yandex\Geo\Api;
-use Yandex\Geo\Exception as YandexGeoException;
 
 class AddressDistanceCalculator extends PointDistanceCalculator
 {
     private $api;
 
-    /**
-     * @param string $yandexGeoCoderApiKey
-     * @param Polygon $basePolygon
-     * @param Polygon $junctionsPolygon
-     * @param CacheInterface|null $cache
-     * @param int $cacheTtl
-     */
     public function __construct(
         string $yandexGeoCoderApiKey,
         Polygon $basePolygon,
         Polygon $junctionsPolygon,
-        CacheInterface $cache = null,
+        ?CacheInterface $cache = null,
         int $cacheTtl = 5 * 24 * 60 * 60
     ) {
         $this->api = new Api();
@@ -42,14 +33,15 @@ class AddressDistanceCalculator extends PointDistanceCalculator
      * @return DistanceBetweenPoints
      * @throws DistanceException
      * @throws InnerPolygonException
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
+     * @throws CacheInvalidArgumentException
      */
     public function calculate($target, bool $calcByRoutes = true): DistanceBetweenPoints
     {
-        if (is_string($target) === false) {
-            throw new InvalidArgumentException('Target param most be string address');
+        if (\is_string($target) === false) {
+            throw new \InvalidArgumentException('Target param most be string address');
         }
-        $cacheKey = 'geocoder.' . md5(strtolower($target));
+        $cacheKey = 'geocoder.' . \md5(\strtolower($target));
         try {
             if ($this->cache && $this->cache->has($cacheKey)) {
                 $response = $this->cache->get($cacheKey);
@@ -63,7 +55,7 @@ class AddressDistanceCalculator extends PointDistanceCalculator
                     $this->cache->set($cacheKey, $response, $this->cacheTtl);
                 }
             }
-        } catch (YandexGeoException|CacheException $e) {
+        } catch (\Exception $e) {
             throw new DistanceException($e->getMessage(), $e->getCode(), $e);
         }
 

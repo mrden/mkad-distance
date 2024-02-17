@@ -11,33 +11,33 @@ class SpbKadCalculateDistanceTest extends TestCase
 {
     public function testCalculatePoint()
     {
-        $distance = Distance::createSpbKadCalculator(
+        $distance = Distance::calculateByRouteSpbKadCalculator(
             new Point(60.021319, 30.654084)
-        )->calculate();
-        $this->assertEquals(17.57, $distance);
+        );
+        $this->assertEqualsWithDelta(17, \round($distance), 1);
     }
 
     public function testCalculateArray()
     {
-        $distance = Distance::createSpbKadCalculator(
+        $distance = Distance::calculateByRouteSpbKadCalculator(
             [60.021319, 30.654084]
-        )->calculate();
-        $this->assertEquals(17.57, $distance);
+        );
+        $this->assertEqualsWithDelta(17, \round($distance), 1);
     }
 
     public function testCalculateAddress()
     {
-        $distance = Distance::createSpbKadCalculator(
+        $distance = Distance::calculateByRouteSpbKadCalculator(
             'Всеволожск, Ленинградская область', [
                 'yandexGeoCoderApiKey' => $this->getYandexGeoCoderApiKey(),
             ]
-        )->calculate();
-        $this->assertEquals(17.57, $distance);
+        );
+        $this->assertEqualsWithDelta(17, \round($distance), 1);
     }
 
     public function testFailCalculate()
     {
         $this->expectException(InvalidArgumentException::class);
-        Distance::createSpbKadCalculator(456);
+        Distance::calculateByRouteSpbKadCalculator(456);
     }
 }

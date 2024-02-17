@@ -2,9 +2,7 @@
 
 namespace Mrden\MkadDistance\Geometry;
 
-use Stringable;
-
-abstract class Polygon implements Stringable
+abstract class Polygon implements \Stringable
 {
     /**
      * @var Point[]
@@ -13,7 +11,7 @@ abstract class Polygon implements Stringable
 
     /**
      * Polygon constructor.
-     * @param Point[]|array $vertices
+     * @param list<Point>|list<array{0: float, 1: float}> $vertices
      */
     public function __construct(array $vertices = [])
     {
@@ -67,7 +65,7 @@ abstract class Polygon implements Stringable
 
         // Check if the point is inside the polygon or on the boundary
         $intersections = 0;
-        $vertices_count = count($this->vertices);
+        $vertices_count = \count($this->vertices);
 
         for ($i = 1; $i < $vertices_count; $i++) {
             $vertexPrev = $this->vertices[$i - 1];

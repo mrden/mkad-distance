@@ -6,14 +6,14 @@ use InvalidArgumentException;
 use Mrden\MkadDistance\Geometry\Point;
 use Mrden\MkadDistance\Geometry\Polygon\MscMkad;
 use Mrden\MkadDistance\Geometry\Polygon\MscMkadJunctions;
-use Mrden\MkadDistance\Iterface\DistanceCalculatorStrategy;
-use Mrden\MkadDistance\Strategy\ArrayDistanceCalculator;
+use Mrden\MkadDistance\Contracts\DistanceCalculator;
+use Mrden\MkadDistance\Calculator\ArrayDistanceCalculator;
 use Tests\TestCase;
 
 class MscMkadArrayCalculateDistanceTest extends TestCase
 {
     /**
-     * @var DistanceCalculatorStrategy
+     * @var DistanceCalculator
      */
     private $calculator;
 

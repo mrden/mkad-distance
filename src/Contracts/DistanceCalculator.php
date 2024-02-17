@@ -1,15 +1,14 @@
 <?php
 
-namespace Mrden\MkadDistance\Iterface;
+namespace Mrden\MkadDistance\Contracts;
 
 use Mrden\MkadDistance\Geometry\DistanceBetweenPoints;
+use Mrden\MkadDistance\Geometry\Point;
 
-interface DistanceCalculatorStrategy
+interface DistanceCalculator
 {
     /**
-     * @param $target
-     * @param bool $calcByRoutes
-     * @return DistanceBetweenPoints
+     * @param Point|array{0: float, 1: float}|string $target
      */
     public function calculate($target, bool $calcByRoutes = true): DistanceBetweenPoints;
 }

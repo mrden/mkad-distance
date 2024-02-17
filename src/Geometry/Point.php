@@ -13,28 +13,17 @@ class Point
      */
     private $lon;
 
-    /**
-     * Point constructor.
-     * @param float $lat
-     * @param float $lon
-     */
     public function __construct(float $lat, float $lon)
     {
         $this->lat = $lat;
         $this->lon = $lon;
     }
 
-    /**
-     * @return float
-     */
     public function getLat(): float
     {
         return $this->lat;
     }
 
-    /**
-     * @return float
-     */
     public function getLon(): float
     {
         return $this->lon;
@@ -42,21 +31,16 @@ class Point
 
     public function __toString(): string
     {
-        return sprintf('%s,%s', $this->lon, $this->lat);
+        return \sprintf('%s,%s', $this->lon, $this->lat);
     }
 
-    /**
-     * @param Point $p1
-     * @param Point $p2
-     * @return bool
-     */
     public static function compare(Point $p1, Point $p2): bool
     {
         return $p1->getLat() == $p2->getLat() && $p1->getLon() == $p2->getLon();
     }
 
     /**
-     * @param array|float[] $coordinate
+     * @param array{0: float, 1: float} $coordinate
      * @return Point
      */
     public static function createFromArray(array $coordinate): Point
