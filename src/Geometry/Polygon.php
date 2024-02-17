@@ -5,9 +5,9 @@ namespace Mrden\MkadDistance\Geometry;
 abstract class Polygon implements \Stringable
 {
     /**
-     * @var Point[]
+     * @var list<Point>
      */
-    private $vertices = [];
+    private array $vertices = [];
 
     /**
      * Polygon constructor.
@@ -29,17 +29,13 @@ abstract class Polygon implements \Stringable
     }
 
     /**
-     * @return Point[]
+     * @return list<Point>
      */
     public function getVertices(): array
     {
         return $this->vertices;
     }
 
-    /**
-     * @param Point $point
-     * @return bool
-     */
     public function pointOnVertex(Point $point): bool
     {
         foreach ($this->vertices as $vertex) {
@@ -53,8 +49,6 @@ abstract class Polygon implements \Stringable
 
     /**
      * Попадает ли точка внутрь полигона
-     * @param Point $point
-     * @return bool
      */
     public function isInner(Point $point): bool
     {

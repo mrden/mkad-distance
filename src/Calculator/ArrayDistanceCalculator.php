@@ -11,13 +11,13 @@ use Mrden\MkadDistance\Geometry\Point;
 class ArrayDistanceCalculator extends PointDistanceCalculator
 {
     /**
-     * @param array $target
+     * @param Point|array{0: float, 1: float}|string $target
      * @throws DistanceRequestException
      * @throws InnerPolygonException
      * @throws DistanceException
      * @throws \InvalidArgumentException
      */
-    public function calculate($target, bool $calcByRoutes = true): DistanceBetweenPoints
+    public function calculate(Point|array|string $target, bool $calcByRoutes = true): DistanceBetweenPoints
     {
         if (!\is_array($target)) {
             throw new \InvalidArgumentException(

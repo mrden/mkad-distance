@@ -2,7 +2,7 @@
     "name": "mrden/mkad-distance",
     "description": "Расчет расстояний за МКАД",
     "type": "library",
-    "version": "2.0.1",
+    "version": "4.0.0",
     "keywords": [
         "distance",
         "mkad",
@@ -11,20 +11,13 @@
         "расстояние за мкад"
     ],
     "license": "MIT",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/mrden/php-osrm"
-        }
-    ],
     "require": {
-        "php": "^7.3 || ^8.0",
+        "php": "^8",
         "ext-curl": "*",
         "ext-json": "*",
-        "yandex/geo": "*",
+        "mrden/php-osrm": "^3.0",
         "psr/simple-cache": "^1.0",
-        "symfony/polyfill-php80": "^1.25",
-        "mrden/php-osrm": "^2.0"
+        "yandex/geo": "*"
     },
     "authors": [
         {
@@ -42,15 +35,15 @@
             "Tests\\": "tests/"
         }
     },
-    "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.4",
-        "phpunit/phpunit": "^9.5",
-        "vimeo/psalm": "^4.30"
-    },
     "scripts": {
         "test": "vendor/bin/phpunit"
     },
     "config": {
         "sort-packages": true
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.9",
+        "phpunit/phpunit": "^10.5",
+        "vimeo/psalm": "^5.22"
     }
 }

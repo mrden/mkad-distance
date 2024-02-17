@@ -4,14 +4,9 @@ namespace Mrden\MkadDistance\Geometry;
 
 class Point
 {
-    /**
-     * @var float
-     */
-    private $lat;
-    /**
-     * @var float
-     */
-    private $lon;
+    private float $lat;
+
+    private float $lon;
 
     public function __construct(float $lat, float $lon)
     {
@@ -41,7 +36,6 @@ class Point
 
     /**
      * @param array{0: float, 1: float} $coordinate
-     * @return Point
      */
     public static function createFromArray(array $coordinate): Point
     {

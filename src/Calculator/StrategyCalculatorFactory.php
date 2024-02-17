@@ -8,7 +8,7 @@ use Mrden\MkadDistance\Contracts\DistanceCalculator;
 
 class StrategyCalculatorFactory
 {
-    private $options;
+    private array $options;
 
     public function __construct(array $options = [])
     {
@@ -16,13 +16,13 @@ class StrategyCalculatorFactory
     }
 
     /**
-     * @param Point|array{0: float, 1: float}|string $target
+     * @param array{0: float, 1: float}|string|Point $target
      * @throws \InvalidArgumentException
      */
     public function create(
-        $target,
-        Polygon $basePolygon,
-        Polygon $junctionsPolygon
+        Point|array|string $target,
+        Polygon            $basePolygon,
+        Polygon            $junctionsPolygon
     ): ?DistanceCalculator {
         $cache = $this->options['cache'] ?? null;
 

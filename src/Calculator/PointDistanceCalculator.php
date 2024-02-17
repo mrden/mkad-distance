@@ -18,12 +18,12 @@ class PointDistanceCalculator extends AbstractDistanceCalculate implements Dista
     private const JUNCTIONS_LIMIT = 6;
 
     /**
-     * @param Point $target
+     * @param Point|array{0: float, 1: float}|string $target
      * @throws DistanceRequestException
      * @throws InnerPolygonException
      * @throws DistanceException
      */
-    public function calculate($target, bool $calcByRoutes = true): DistanceBetweenPoints
+    public function calculate(Point|array|string $target, bool $calcByRoutes = true): DistanceBetweenPoints
     {
         if (!$target instanceof Point) {
             throw new \InvalidArgumentException(
@@ -48,33 +48,33 @@ class PointDistanceCalculator extends AbstractDistanceCalculate implements Dista
         $routeDistancesToJunctions = [];
 
         if (!$calcByRoutes) {
-            return $minLineDistance;
+            $result = $minLineDistance;
+        } else {
+            // Сортируем массив расстояний до развязок по возрастанию
+            \usort($lineDistancesToJunctions, function (DistanceBetweenPoints $distance1, DistanceBetweenPoints $distance2) {
+                if ($distance1->getDistance() == $distance2->getDistance()) {
+                    return 0;
+                }
+                return ($distance1->getDistance() < $distance2->getDistance()) ? -1 : 1;
+            });
+            $current = 0;
+            foreach ($lineDistancesToJunctions as $lineDistance) {
+                try {
+                    $routeDistancesToJunctions[] = $this->calculateRouteDistance(
+                        $lineDistance->getFrom(),
+                        $lineDistance->getTo()
+                    );
+                } catch (\Exception|CacheInvalidArgumentException $e) {
+                    throw new DistanceRequestException($e->getMessage(), $e->getCode(), $e, $minLineDistance);
+                }
+                $current++;
+                if ($current >= self::JUNCTIONS_LIMIT) {
+                    break;
+                }
+            }
+            $result = $this->findMinDistance($routeDistancesToJunctions);
         }
 
-        // Сортируем массив расстояний до развязок по возрастанию
-        \usort($lineDistancesToJunctions, function (DistanceBetweenPoints $distance1, DistanceBetweenPoints $distance2) {
-            if ($distance1->getDistance() == $distance2->getDistance()) {
-                return 0;
-            }
-            return ($distance1->getDistance() < $distance2->getDistance()) ? -1 : 1;
-        });
-        $current = 0;
-        foreach ($lineDistancesToJunctions as $lineDistance) {
-            try {
-                $routeDistancesToJunctions[] = $this->calculateRouteDistance(
-                    $lineDistance->getFrom(),
-                    $lineDistance->getTo()
-                );
-            } catch (\Exception|CacheInvalidArgumentException $e) {
-                throw new DistanceRequestException($e->getMessage(), $e->getCode(), $e, $minLineDistance);
-            }
-            $current++;
-            if ($current >= self::JUNCTIONS_LIMIT) {
-                break;
-            }
-        }
-
-        $result = $this->findMinDistance($routeDistancesToJunctions);
         if (!$result) {
             throw new DistanceException('Error calculate');
         }

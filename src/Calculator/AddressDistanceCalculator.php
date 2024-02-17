@@ -13,7 +13,7 @@ use Yandex\Geo\Api;
 
 class AddressDistanceCalculator extends PointDistanceCalculator
 {
-    private $api;
+    private Api $api;
 
     public function __construct(
         string $yandexGeoCoderApiKey,
@@ -28,17 +28,14 @@ class AddressDistanceCalculator extends PointDistanceCalculator
     }
 
     /**
-     * @param string $target
-     * @param bool $calcByRoutes
-     * @return DistanceBetweenPoints
      * @throws DistanceException
      * @throws InnerPolygonException
      * @throws \InvalidArgumentException
      * @throws CacheInvalidArgumentException
      */
-    public function calculate($target, bool $calcByRoutes = true): DistanceBetweenPoints
+    public function calculate(Point|array|string $target, bool $calcByRoutes = true): DistanceBetweenPoints
     {
-        if (\is_string($target) === false) {
+        if (!\is_string($target)) {
             throw new \InvalidArgumentException('Target param most be string address');
         }
         $cacheKey = 'geocoder.' . \md5(\strtolower($target));
@@ -51,9 +48,7 @@ class AddressDistanceCalculator extends PointDistanceCalculator
                     ->load()
                     ->getResponse();
 
-                if ($this->cache) {
-                    $this->cache->set($cacheKey, $response, $this->cacheTtl);
-                }
+                $this->cache?->set($cacheKey, $response, $this->cacheTtl);
             }
         } catch (\Exception $e) {
             throw new DistanceException($e->getMessage(), $e->getCode(), $e);

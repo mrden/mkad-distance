@@ -20,25 +20,13 @@ abstract class AbstractDistanceCalculate
      */
     private const EARTH_RADIUS = 6372795.0;
 
-    /**
-     * @var Polygon
-     */
-    protected $basePolygon;
-    /**
-     * @var Polygon
-     */
-    protected $junctionsPolygon;
+    protected Polygon $basePolygon;
 
-    /**
-     * @var CacheInterface|null
-     */
-    protected $cache;
+    protected Polygon $junctionsPolygon;
 
-    /**
-     * Default 5 days
-     * @var int
-     */
-    protected $cacheTtl;
+    protected ?CacheInterface $cache;
+
+    protected int $cacheTtl;
 
     public function __construct(
         Polygon $basePolygon,
@@ -65,11 +53,11 @@ abstract class AbstractDistanceCalculate
         $sl1 = sin($lat1);
         $sl2 = sin($lat2);
         $delta = $long2 - $long1;
-        $cdelta = cos($delta);
-        $sdelta = sin($delta);
+        $cDelta = cos($delta);
+        $sDelta = sin($delta);
         // вычисления длины большого круга
-        $y = sqrt(pow($cl2 * $sdelta, 2) + pow($cl1 * $sl2 - $sl1 * $cl2 * $cdelta, 2));
-        $x = $sl1 * $sl2 + $cl1 * $cl2 * $cdelta;
+        $y = sqrt(pow($cl2 * $sDelta, 2) + pow($cl1 * $sl2 - $sl1 * $cl2 * $cDelta, 2));
+        $x = $sl1 * $sl2 + $cl1 * $cl2 * $cDelta;
         $ad = atan2($y, $x);
         return new DistanceBetweenPoints($from, $to, $ad * self::EARTH_RADIUS);
     }
@@ -94,9 +82,7 @@ abstract class AbstractDistanceCalculate
                     if (empty($result['routes'])) {
                         throw new DistanceException('Bad response.');
                     }
-                    if ($this->cache) {
-                        $this->cache->set($cacheKey, $result, $this->cacheTtl);
-                    }
+                    $this->cache?->set($cacheKey, $result, $this->cacheTtl);
                 } else {
                     throw new RouteNotFoundException('Route not found.');
                 }

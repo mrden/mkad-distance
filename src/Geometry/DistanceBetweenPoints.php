@@ -4,19 +4,11 @@ namespace Mrden\MkadDistance\Geometry;
 
 class DistanceBetweenPoints
 {
-    /**
-     * @var Point
-     */
-    private $from;
-    /**
-     * @var Point
-     */
-    private $to;
-    /**
-     * Расстояние
-     * @var float
-     */
-    private $distance;
+    private Point $from;
+
+    private Point $to;
+
+    private float $distance;
 
     public function __construct(Point $from, Point $to, float $distance)
     {

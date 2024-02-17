@@ -10,5 +10,5 @@ interface DistanceCalculator
     /**
      * @param Point|array{0: float, 1: float}|string $target
      */
-    public function calculate($target, bool $calcByRoutes = true): DistanceBetweenPoints;
+    public function calculate(Point|array|string $target, bool $calcByRoutes = true): DistanceBetweenPoints;
 }

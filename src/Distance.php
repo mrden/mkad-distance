@@ -12,10 +12,7 @@ use Mrden\MkadDistance\Calculator\StrategyCalculatorFactory;
 
 class Distance
 {
-    /**
-     * @var DistanceCalculator
-     */
-    private $calculator;
+    private DistanceCalculator $calculator;
 
     public function __construct(DistanceCalculator $calculator)
     {
@@ -26,7 +23,7 @@ class Distance
      * Distance in kilometers
      * @param Point|array{0: float, 1: float}|string $target
      */
-    public function calculate($target, bool $calcByRoutes = true): float
+    public function calculate(Point|array|string $target, bool $calcByRoutes = true): float
     {
         return \round($this->calculator->calculate($target, $calcByRoutes)->getDistance() / 1000, 2);
     }
@@ -34,7 +31,7 @@ class Distance
     /**
      * @param Point|array{0: float, 1: float}|string $target
      */
-    public static function calculateByRouteToMoscowMkad($target, array $options = []): float
+    public static function calculateByRouteToMoscowMkad(Point|array|string $target, array $options = []): float
     {
         $strategyFactory = new StrategyCalculatorFactory($options);
         return (new Distance($strategyFactory->create(
@@ -47,7 +44,7 @@ class Distance
     /**
      * @param Point|array{0: float, 1: float}|string $target
      */
-    public static function calculateByLineToMoscowMkad($target, array $options = []): float
+    public static function calculateByLineToMoscowMkad(Point|array|string $target, array $options = []): float
     {
         $strategyFactory = new StrategyCalculatorFactory($options);
         return (new Distance($strategyFactory->create(
@@ -60,7 +57,7 @@ class Distance
     /**
      * @param Point|array{0: float, 1: float}|string $target
      */
-    public static function calculateByRouteSpbKadCalculator($target, array $options = []): float
+    public static function calculateByRouteSpbKadCalculator(Point|array|string $target, array $options = []): float
     {
         $strategyFactory = new StrategyCalculatorFactory($options);
         return (new Distance($strategyFactory->create(
@@ -71,9 +68,9 @@ class Distance
     }
 
     /**
-     * @param Point|array{0: float, 1: float}|string $target
+     * @param array{0: float, 1: float}|string|Point $target
      */
-    public static function calculateByLineSpbKadCalculator($target, array $options = []): float
+    public static function calculateByLineSpbKadCalculator(Point|array|string $target, array $options = []): float
     {
         $strategyFactory = new StrategyCalculatorFactory($options);
         return (new Distance($strategyFactory->create(
