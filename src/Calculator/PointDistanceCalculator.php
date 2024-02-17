@@ -22,6 +22,7 @@ class PointDistanceCalculator extends AbstractDistanceCalculate implements Dista
      * @throws DistanceRequestException
      * @throws InnerPolygonException
      * @throws DistanceException
+     * @throws CacheInvalidArgumentException
      */
     public function calculate(Point|array|string $target, bool $calcByRoutes = true): DistanceBetweenPoints
     {
@@ -64,7 +65,7 @@ class PointDistanceCalculator extends AbstractDistanceCalculate implements Dista
                         $lineDistance->getFrom(),
                         $lineDistance->getTo()
                     );
-                } catch (\Exception|CacheInvalidArgumentException $e) {
+                } catch (\Exception $e) {
                     throw new DistanceRequestException($e->getMessage(), $e->getCode(), $e, $minLineDistance);
                 }
                 $current++;
@@ -79,6 +80,6 @@ class PointDistanceCalculator extends AbstractDistanceCalculate implements Dista
             throw new DistanceException('Error calculate');
         }
 
-        return $this->findMinDistance($routeDistancesToJunctions);
+        return $result;
     }
 }
