@@ -79,6 +79,6 @@ class PointDistanceCalculator extends AbstractDistanceCalculate implements Dista
             throw new DistanceException('Error calculate');
         }
 
-        return $this->findMinDistance($routeDistancesToJunctions);
+        return $result;
     }
 }
