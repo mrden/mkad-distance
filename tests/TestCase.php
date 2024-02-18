@@ -4,8 +4,17 @@ namespace Tests;
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
+    /**
+     * @return string
+     * @throws \Exception
+     */
     protected function getYandexGeoCoderApiKey(): string
     {
-        return '606b6dc0-6c97-4335-b9da-0a8140288a8a';
+        $config = include __DIR__ . '/test.config.php';
+        $token = $config['token'] ?? '';
+        if (!$token) {
+            throw new \Exception('not set yandexGeoCoderApiKey (see tests/test.config.php)');
+        }
+        return $token;
     }
 }

@@ -16,8 +16,8 @@
         "ext-curl": "*",
         "ext-json": "*",
         "mrden/php-osrm": "^3.0",
-        "psr/simple-cache": "^1.0",
-        "yandex/geo": "*"
+        "mrden/yandex-geo": "^2.0",
+        "psr/simple-cache": "^1.0"
     },
     "authors": [
         {
