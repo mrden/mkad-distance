@@ -57,7 +57,7 @@ class Distance
     /**
      * @param Point|array{0: float, 1: float}|string $target
      */
-    public static function calculateByRouteSpbKad(Point|array|string $target, array $options = []): float
+    public static function calculateByRouteToSpbKad(Point|array|string $target, array $options = []): float
     {
         $strategyFactory = new StrategyCalculatorFactory($options);
         return (new Distance($strategyFactory->create(
@@ -70,7 +70,7 @@ class Distance
     /**
      * @param array{0: float, 1: float}|string|Point $target
      */
-    public static function calculateByLineSpbKad(Point|array|string $target, array $options = []): float
+    public static function calculateByLineToSpbKad(Point|array|string $target, array $options = []): float
     {
         $strategyFactory = new StrategyCalculatorFactory($options);
         return (new Distance($strategyFactory->create(

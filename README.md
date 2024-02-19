@@ -21,7 +21,7 @@ $distance = Distance::calculateByRouteToMoscowMkad(
 );
 
 // Расчет по текстовому названию
-$distance = Distance::calculateByRouteSpbKad(
+$distance = Distance::calculateByRouteToSpbKad(
     'Санкт-Петербург, посёлок Песочный, Советская улица, 34/21',
     ['yandexGeoCoderApiKey' => 'YOUR_TOKEN']   
 );

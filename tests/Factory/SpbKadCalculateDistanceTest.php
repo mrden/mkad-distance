@@ -11,7 +11,7 @@ class SpbKadCalculateDistanceTest extends TestCase
 {
     public function testCalculatePoint()
     {
-        $distance = Distance::calculateByRouteSpbKad(
+        $distance = Distance::calculateByRouteToSpbKad(
             new Point(60.021319, 30.654084)
         );
         $this->assertEqualsWithDelta(17, \round($distance), 1);
@@ -19,7 +19,7 @@ class SpbKadCalculateDistanceTest extends TestCase
 
     public function testCalculateArray()
     {
-        $distance = Distance::calculateByRouteSpbKad(
+        $distance = Distance::calculateByRouteToSpbKad(
             [60.021319, 30.654084]
         );
         $this->assertEqualsWithDelta(17, \round($distance), 1);
@@ -27,7 +27,7 @@ class SpbKadCalculateDistanceTest extends TestCase
 
     public function testCalculateAddress()
     {
-        $distance = Distance::calculateByRouteSpbKad(
+        $distance = Distance::calculateByRouteToSpbKad(
             'Всеволожск, Ленинградская область',
             [
                 'yandexGeoCoderApiKey' => $this->getYandexGeoCoderApiKey(),
@@ -38,7 +38,7 @@ class SpbKadCalculateDistanceTest extends TestCase
 
     public function testCalculatePointByLine()
     {
-        $distance = Distance::calculateByLineSpbKad(
+        $distance = Distance::calculateByLineToSpbKad(
             new Point(60.021319, 30.654084)
         );
         $this->assertEqualsWithDelta(10, \round($distance), 1);
@@ -46,7 +46,7 @@ class SpbKadCalculateDistanceTest extends TestCase
 
     public function testCalculateArrayByLine()
     {
-        $distance = Distance::calculateByLineSpbKad(
+        $distance = Distance::calculateByLineToSpbKad(
             [60.021319, 30.654084]
         );
         $this->assertEqualsWithDelta(10, \round($distance), 1);
@@ -54,7 +54,7 @@ class SpbKadCalculateDistanceTest extends TestCase
 
     public function testCalculateAddressByLine()
     {
-        $distance = Distance::calculateByLineSpbKad(
+        $distance = Distance::calculateByLineToSpbKad(
             'Всеволожск, Ленинградская область',
             [
                 'yandexGeoCoderApiKey' => $this->getYandexGeoCoderApiKey(),
@@ -66,6 +66,6 @@ class SpbKadCalculateDistanceTest extends TestCase
     public function testFailCalculate()
     {
         $this->expectException(InvalidArgumentException::class);
-        Distance::calculateByRouteSpbKad(456);
+        Distance::calculateByRouteToSpbKad(456);
     }
 }
